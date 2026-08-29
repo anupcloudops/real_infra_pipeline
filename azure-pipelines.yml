@@ -243,7 +243,7 @@ stages:
 
       env:
 
-        TF_VAR_vm_credentials: |
+        TF_VAR_secrets: |
           {
             "vm1": {
               "username": "$(VM1_USERNAME)",
