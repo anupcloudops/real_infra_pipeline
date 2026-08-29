@@ -6,5 +6,5 @@ variable "nics" {}
 variable "nsgs" {}
 variable "association" {}
 variable "keyvolt" {}
-# variable "secrets" {}
+variable "secrets" {}
 variable "vms" {}

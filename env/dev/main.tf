@@ -36,7 +36,7 @@ module "keyvault" {
   depends_on = [ module.rg ]
   source = "../../module/08_keyvault"
   keyvolt = var.keyvolt
-  # secrets = var.secrets
+  secrets = var.secrets
 }
 module "vm" {
   depends_on = [ module.nic, module.keyvault ]
