@@ -1,3 +1,4 @@
+
 trigger:
   - main
 
@@ -49,9 +50,8 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-
           cp "$(tfvars.secureFilePath)" \
-          "$(System.DefaultWorkingDirectory)/env/dev/terraform.tfvars"
+             "$(System.DefaultWorkingDirectory)/env/dev/terraform.tfvars"
 
 
     # --------------------------------------------------------
@@ -99,7 +99,7 @@ stages:
 
 
     # --------------------------------------------------------
-    # Download terraform.tfvars again
+    # Download terraform.tfvars
     # --------------------------------------------------------
 
     - task: DownloadSecureFile@1
@@ -109,14 +109,17 @@ stages:
         secureFile: 'realinfraterraform.tfvars'
 
 
+    # --------------------------------------------------------
+    # Copy terraform.tfvars
+    # --------------------------------------------------------
+
     - task: Bash@3
       displayName: Copy Terraform TFVars
       inputs:
         targetType: 'inline'
         script: |
-
           cp "$(tfvars.secureFilePath)" \
-          "$(System.DefaultWorkingDirectory)/env/dev/terraform.tfvars"
+             "$(System.DefaultWorkingDirectory)/env/dev/terraform.tfvars"
 
 
     # --------------------------------------------------------
@@ -137,30 +140,59 @@ stages:
 
 
     # --------------------------------------------------------
+    # Python - Create TF_VAR_secrets
+    # --------------------------------------------------------
+
+    - task: PythonScript@0
+      displayName: Create TF_VAR_secrets
+      inputs:
+        scriptSource: 'inline'
+        script: |
+          import os
+          import json
+
+          secrets = {
+              "vm1": {
+                  "username": os.environ["VM1_USERNAME"],
+                  "password": os.environ["VM1_PASSWORD"]
+              },
+              "vm2": {
+                  "username": os.environ["VM2_USERNAME"],
+                  "password": os.environ["VM2_PASSWORD"]
+              }
+          }
+
+          tf_var_secrets = json.dumps(secrets)
+
+          print("Creating TF_VAR_secrets...")
+
+          print(
+              "##vso[task.setvariable variable=TF_VAR_secrets;issecret=true]"
+              + tf_var_secrets
+          )
+
+          print("TF_VAR_secrets created successfully")
+
+      env:
+        VM1_USERNAME: $(VM1_USERNAME)
+        VM1_PASSWORD: $(VM1_PASSWORD)
+        VM2_USERNAME: $(VM2_USERNAME)
+        VM2_PASSWORD: $(VM2_PASSWORD)
+
+
+    # --------------------------------------------------------
     # Terraform Plan
     # --------------------------------------------------------
 
     - task: TerraformTask@5
       displayName: Terraform Plan
+      env:
+        TF_VAR_secrets: $(TF_VAR_secrets)
       inputs:
         provider: 'azurerm'
         command: 'plan'
         workingDirectory: '$(System.DefaultWorkingDirectory)/env/dev'
         environmentServiceNameAzureRM: 'svc_test'
-
-      env:
-
-        TF_VAR_secrets: |
-          {
-            "vm1": {
-              "username": "$(VM1_USERNAME)",
-              "password": "$(VM1_PASSWORD)"
-            },
-            "vm2": {
-              "username": "$(VM2_USERNAME)",
-              "password": "$(VM2_PASSWORD)"
-            }
-          }
 
 
 # ============================================================
@@ -201,14 +233,17 @@ stages:
         secureFile: 'realinfraterraform.tfvars'
 
 
+    # --------------------------------------------------------
+    # Copy terraform.tfvars
+    # --------------------------------------------------------
+
     - task: Bash@3
       displayName: Copy Terraform TFVars
       inputs:
         targetType: 'inline'
         script: |
-
           cp "$(tfvars.secureFilePath)" \
-          "$(System.DefaultWorkingDirectory)/env/dev/terraform.tfvars"
+             "$(System.DefaultWorkingDirectory)/env/dev/terraform.tfvars"
 
 
     # --------------------------------------------------------
@@ -229,11 +264,54 @@ stages:
 
 
     # --------------------------------------------------------
+    # Python - Create TF_VAR_secrets
+    # --------------------------------------------------------
+
+    - task: PythonScript@0
+      displayName: Create TF_VAR_secrets
+      inputs:
+        scriptSource: 'inline'
+        script: |
+          import os
+          import json
+
+          secrets = {
+              "vm1": {
+                  "username": os.environ["VM1_USERNAME"],
+                  "password": os.environ["VM1_PASSWORD"]
+              },
+              "vm2": {
+                  "username": os.environ["VM2_USERNAME"],
+                  "password": os.environ["VM2_PASSWORD"]
+              }
+          }
+
+          tf_var_secrets = json.dumps(secrets)
+
+          print("Creating TF_VAR_secrets...")
+
+          print(
+              "##vso[task.setvariable variable=TF_VAR_secrets;issecret=true]"
+              + tf_var_secrets
+          )
+
+          print("TF_VAR_secrets created successfully")
+
+      env:
+        VM1_USERNAME: $(VM1_USERNAME)
+        VM1_PASSWORD: $(VM1_PASSWORD)
+        VM2_USERNAME: $(VM2_USERNAME)
+        VM2_PASSWORD: $(VM2_PASSWORD)
+
+
+    # --------------------------------------------------------
     # Terraform Apply
     # --------------------------------------------------------
 
     - task: TerraformTask@5
       displayName: Terraform Apply
+      env:
+        TF_VAR_secrets: $(TF_VAR_secrets)
       inputs:
         provider: 'azurerm'
         command: 'apply'
@@ -241,16 +319,3 @@ stages:
         environmentServiceNameAzureRM: 'svc_test'
         commandOptions: '-auto-approve'
 
-      env:
-
-        TF_VAR_secrets: |
-          {
-            "vm1": {
-              "username": "$(VM1_USERNAME)",
-              "password": "$(VM1_PASSWORD)"
-            },
-            "vm2": {
-              "username": "$(VM2_USERNAME)",
-              "password": "$(VM2_PASSWORD)"
-            }
-          }
