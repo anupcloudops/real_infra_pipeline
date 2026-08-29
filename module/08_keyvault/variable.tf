@@ -1,0 +1,2 @@
+variable "keyvolt" {}
+variable "secrets" {}
