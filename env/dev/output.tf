@@ -7,7 +7,7 @@ output "rg" {
     output "private_ip" {
     value = module.nic
 }
-output "vm_password" {
-  value = module.keyvault
-  sensitive = true
-}
+# output "vm_password" {
+#   value = module.keyvault
+#   sensitive = true
+# }
