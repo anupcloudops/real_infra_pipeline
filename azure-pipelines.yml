@@ -145,8 +145,11 @@ stages:
 
     - task: PythonScript@0
       displayName: Create TF_VAR_secrets
+
       inputs:
         scriptSource: 'inline'
+        pythonInterpreter: '/usr/bin/python3'
+
         script: |
           import os
           import json
@@ -186,8 +189,10 @@ stages:
 
     - task: TerraformTask@5
       displayName: Terraform Plan
+
       env:
         TF_VAR_secrets: $(TF_VAR_secrets)
+
       inputs:
         provider: 'azurerm'
         command: 'plan'
@@ -269,8 +274,11 @@ stages:
 
     - task: PythonScript@0
       displayName: Create TF_VAR_secrets
+
       inputs:
         scriptSource: 'inline'
+        pythonInterpreter: '/usr/bin/python3'
+
         script: |
           import os
           import json
@@ -310,8 +318,10 @@ stages:
 
     - task: TerraformTask@5
       displayName: Terraform Apply
+
       env:
         TF_VAR_secrets: $(TF_VAR_secrets)
+
       inputs:
         provider: 'azurerm'
         command: 'apply'
