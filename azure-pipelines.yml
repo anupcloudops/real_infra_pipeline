@@ -35,3 +35,9 @@ stages:
             script: |
               cp "$(tfvars.secureFilePath)" \
               "$(System.DefaultWorkingDirectory)/env/dev/terraform.tfvars"
+        - task: TerraformTask@5
+          inputs:
+            provider: 'azurerm'
+            command: 'plan'
+            workingDirectory: '$(System.DefaultWorkingDirectory)/env/dev'
+            environmentServiceNameAzureRM: 'svc_test'
