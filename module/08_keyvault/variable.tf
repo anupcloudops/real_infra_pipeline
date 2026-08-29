@@ -1,2 +1,2 @@
 variable "keyvolt" {}
-variable "secrets" {}
+# variable "secrets" {}
