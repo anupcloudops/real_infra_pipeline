@@ -6,5 +6,13 @@ variable "nics" {}
 variable "nsgs" {}
 variable "association" {}
 variable "keyvolt" {}
-variable "secrets" {}
+
 variable "vms" {}
+variable "secrets" {
+  sensitive = true
+
+  type = map(object({
+    username = string
+    password = string
+  }))
+}

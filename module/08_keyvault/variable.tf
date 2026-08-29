@@ -1,2 +1,9 @@
 variable "keyvolt" {}
-variable "secrets" {}
+variable "secrets" {
+  sensitive = true
+
+  type = map(object({
+    username = string
+    password = string
+  }))
+}
