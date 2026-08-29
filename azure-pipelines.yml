@@ -4,40 +4,136 @@ trigger:
 pool: asr
 
 stages:
-  - stage:
-    jobs:
-      - job: install_terraform
-        steps:
 
-        - task: TerraformInstaller@1
-          inputs:
-            terraformVersion: 'latest'
+- stage: DeployInfrastructure
+  jobs:
 
-        - task: TerraformTask@5
-          inputs:
-            provider: 'azurerm'
-            command: 'init'
-            workingDirectory: '$(System.DefaultWorkingDirectory)/env/dev'
-            backendServiceArm: 'svc_test'
-            backendAzureRmResourceGroupName: 'back-state'
-            backendAzureRmStorageAccountName: 'statestorage88888'
-            backendAzureRmContainerName: 'statecontainer'
-            backendAzureRmKey: 'dev_terraform.tfstate'
+  - job: install_terraform
 
-        - task: DownloadSecureFile@1
-          name: tfvars
-          inputs:
-            secureFile: 'realinfraterraform.tfvars'
+    steps:
 
-        - task: Bash@3
-          inputs:
-            targetType: 'inline'
-            script: |
-              cp "$(tfvars.secureFilePath)" \
-              "$(System.DefaultWorkingDirectory)/env/dev/terraform.tfvars"
-        - task: TerraformTask@5
-          inputs:
-            provider: 'azurerm'
-            command: 'plan'
-            workingDirectory: '$(System.DefaultWorkingDirectory)/env/dev'
-            environmentServiceNameAzureRM: 'svc_test'
+    - task: TerraformInstaller@1
+      displayName: Install Terraform
+      inputs:
+        terraformVersion: 'latest'
+
+
+    # ------------------------------------------------
+    # Download tfvars
+    # ------------------------------------------------
+
+    - task: DownloadSecureFile@1
+      name: tfvars
+      displayName: Download Terraform TFVars
+      inputs:
+        secureFile: 'realinfraterraform.tfvars'
+
+
+    - task: Bash@3
+      displayName: Copy TFVars
+      inputs:
+        targetType: 'inline'
+        script: |
+
+          cp "$(tfvars.secureFilePath)" \
+          "$(System.DefaultWorkingDirectory)/env/dev/terraform.tfvars"
+
+
+    # ------------------------------------------------
+    # Terraform INIT
+    # ------------------------------------------------
+
+    - task: TerraformTask@5
+      displayName: Terraform Init
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/env/dev'
+        backendServiceArm: 'svc_test'
+        backendAzureRmResourceGroupName: 'back-state'
+        backendAzureRmStorageAccountName: 'statestorage88888'
+        backendAzureRmContainerName: 'statecontainer'
+        backendAzureRmKey: 'dev_terraform.tfstate'
+
+
+    # ------------------------------------------------
+    # Create RG + Network + Key Vault
+    # ------------------------------------------------
+
+    - task: TerraformTask@5
+      displayName: Create Key Vault Infrastructure
+      inputs:
+        provider: 'azurerm'
+        command: 'apply'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/env/dev'
+        environmentServiceNameAzureRM: 'svc_test'
+        commandOptions: '-target=module.rg -target=module.keyvault -auto-approve'
+
+
+    # ------------------------------------------------
+    # Generate and store secrets
+    # ------------------------------------------------
+
+    - task: AzureCLI@2
+      displayName: Create VM Secrets in Key Vault
+      inputs:
+        azureSubscription: 'svc_test'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+
+          KV_NAME="anup-dev-kv-20260826"
+
+          echo "Generating VM credentials..."
+
+          VM1_USER="azureuser"
+          VM1_PASS=$(openssl rand -base64 32)
+
+          VM2_USER="azureuser"
+          VM2_PASS=$(openssl rand -base64 32)
+
+
+          echo "Storing VM1 credentials..."
+
+          az keyvault secret set \
+            --vault-name "$KV_NAME" \
+            --name "vm-user" \
+            --value "$VM1_USER" \
+            --output none
+
+          az keyvault secret set \
+            --vault-name "$KV_NAME" \
+            --name "vm-pass" \
+            --value "$VM1_PASS" \
+            --output none
+
+
+          echo "Storing VM2 credentials..."
+
+          az keyvault secret set \
+            --vault-name "$KV_NAME" \
+            --name "vm1-user" \
+            --value "$VM2_USER" \
+            --output none
+
+          az keyvault secret set \
+            --vault-name "$KV_NAME" \
+            --name "vm1-pass" \
+            --value "$VM2_PASS" \
+            --output none
+
+
+          echo "Secrets successfully stored in Key Vault."
+
+
+    # ------------------------------------------------
+    # Terraform PLAN
+    # ------------------------------------------------
+
+    - task: TerraformTask@5
+      displayName: Terraform Plan
+      inputs:
+        provider: 'azurerm'
+        command: 'plan'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/env/dev'
+        environmentServiceNameAzureRM: 'svc_test'
