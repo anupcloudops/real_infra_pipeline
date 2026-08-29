@@ -36,13 +36,13 @@ resource "azurerm_key_vault" "kvblock" {
 }
 
 resource "azurerm_key_vault_secret" "userblock" {
-  for_each = nonsensitive(toset(keys(var.secrets)))
+  for_each = var.secrets
   name         = "${each.key}-user"
   value        = var.secrets[each.key].username
   key_vault_id = azurerm_key_vault.kvblock["kv1"].id
 }
 resource "azurerm_key_vault_secret" "passblock" {
-  for_each = nonsensitive(toset(keys(var.secrets)))
+  for_each = var.secrets
   name         = "${each.key}-pass"
   value        =  var.secrets[each.key].password
   key_vault_id = azurerm_key_vault.kvblock["kv1"].id
