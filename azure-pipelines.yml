@@ -140,41 +140,24 @@ stages:
 
 
     # --------------------------------------------------------
-    # Python - Create TF_VAR_secrets
+    # Bash - Create TF_VAR_secrets
     # --------------------------------------------------------
 
-    - task: PythonScript@0
+    - task: Bash@3
       displayName: Create TF_VAR_secrets
 
       inputs:
-        scriptSource: 'inline'
-        pythonInterpreter: '/usr/bin/python3'
+        targetType: 'inline'
 
         script: |
-          import os
-          import json
 
-          secrets = {
-              "vm1": {
-                  "username": os.environ["VM1_USERNAME"],
-                  "password": os.environ["VM1_PASSWORD"]
-              },
-              "vm2": {
-                  "username": os.environ["VM2_USERNAME"],
-                  "password": os.environ["VM2_PASSWORD"]
-              }
-          }
+          echo "Creating TF_VAR_secrets..."
 
-          tf_var_secrets = json.dumps(secrets)
+          TF_VAR_SECRETS='{"vm1":{"username":"'$VM1_USERNAME'","password":"'$VM1_PASSWORD'"},"vm2":{"username":"'$VM2_USERNAME'","password":"'$VM2_PASSWORD'"}}'
 
-          print("Creating TF_VAR_secrets...")
+          echo "##vso[task.setvariable variable=TF_VAR_secrets;issecret=true]$TF_VAR_SECRETS"
 
-          print(
-              "##vso[task.setvariable variable=TF_VAR_secrets;issecret=true]"
-              + tf_var_secrets
-          )
-
-          print("TF_VAR_secrets created successfully")
+          echo "TF_VAR_secrets created successfully"
 
       env:
         VM1_USERNAME: $(VM1_USERNAME)
@@ -269,41 +252,24 @@ stages:
 
 
     # --------------------------------------------------------
-    # Python - Create TF_VAR_secrets
+    # Bash - Create TF_VAR_secrets
     # --------------------------------------------------------
 
-    - task: PythonScript@0
+    - task: Bash@3
       displayName: Create TF_VAR_secrets
 
       inputs:
-        scriptSource: 'inline'
-        pythonInterpreter: '/usr/bin/python3'
+        targetType: 'inline'
 
         script: |
-          import os
-          import json
 
-          secrets = {
-              "vm1": {
-                  "username": os.environ["VM1_USERNAME"],
-                  "password": os.environ["VM1_PASSWORD"]
-              },
-              "vm2": {
-                  "username": os.environ["VM2_USERNAME"],
-                  "password": os.environ["VM2_PASSWORD"]
-              }
-          }
+          echo "Creating TF_VAR_secrets..."
 
-          tf_var_secrets = json.dumps(secrets)
+          TF_VAR_SECRETS='{"vm1":{"username":"'$VM1_USERNAME'","password":"'$VM1_PASSWORD'"},"vm2":{"username":"'$VM2_USERNAME'","password":"'$VM2_PASSWORD'"}}'
 
-          print("Creating TF_VAR_secrets...")
+          echo "##vso[task.setvariable variable=TF_VAR_secrets;issecret=true]$TF_VAR_SECRETS"
 
-          print(
-              "##vso[task.setvariable variable=TF_VAR_secrets;issecret=true]"
-              + tf_var_secrets
-          )
-
-          print("TF_VAR_secrets created successfully")
+          echo "TF_VAR_secrets created successfully"
 
       env:
         VM1_USERNAME: $(VM1_USERNAME)
